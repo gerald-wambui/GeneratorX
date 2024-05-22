@@ -1,6 +1,7 @@
 package com.jaguh.someapp.data
 
 import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -46,12 +47,22 @@ import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import coil.size.Size
-import com.jaguh.someapp.HomeActivity
-import com.jaguh.someapp.uriState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 @Composable
 fun AiChatScreen() {
-    val imagePicker = HomeActivity().imagePicker
+    val uriState = MutableStateFlow("")
+
+    // Launcher for the image picker
+    val imagePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        uri?.let {
+            uriState.update { uri.toString() }
+        }
+    }
+
     Scaffold (
         topBar = {
             Box(
@@ -70,18 +81,19 @@ fun AiChatScreen() {
             }
         }
     ){
-        ChatScreen(paddingValues = it, imagePicker)
+        ChatScreen(paddingValues = it, imagePicker, uriState)
     }
 }
 
 @Composable
 fun ChatScreen(
     paddingValues: PaddingValues,
-    imagePicker: ActivityResultLauncher<PickVisualMediaRequest>
+    imagePicker: ActivityResultLauncher<PickVisualMediaRequest>,
+    uriState: MutableStateFlow<String>
 ) {
     val chatViewModel = viewModel<ChatViewModel>()
     val chatState = chatViewModel.chatState.collectAsState().value
-    val bitmap = getBitmap()
+    val bitmap = getBitmap(uriState)
 
     Column (
         modifier = Modifier
@@ -121,7 +133,10 @@ fun ChatScreen(
                         modifier = Modifier
                             .size(40.dp)
                             .padding(bottom = 2.dp)
-                            .clip(RoundedCornerShape(6.dp)),
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable {
+                                       uriState.update { "" }
+                            },
                         contentScale = ContentScale.Crop,
                         bitmap = it.asImageBitmap() ,
                         contentDescription = "picked image",
@@ -224,7 +239,7 @@ fun ModelChatItem(response: String) {
 }
 
 @Composable
-fun getBitmap(): Bitmap? {
+fun getBitmap(uriState: MutableStateFlow<String>): Bitmap? {
     val uri = uriState.collectAsState().value
 
     val imageState: AsyncImagePainter.State = rememberAsyncImagePainter(

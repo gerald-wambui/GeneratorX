@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -52,21 +51,8 @@ import androidx.navigation.NavController
 import com.jaguh.someapp.navigation.AI
 import com.jaguh.someapp.navigation.Navigations
 import com.jaguh.someapp.navigation.Step2
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
-
-val uriState = MutableStateFlow("")
 
 class HomeActivity : ComponentActivity() {
-
-    val imagePicker =
-        registerForActivityResult(
-            ActivityResultContracts.PickVisualMedia()
-        ) {uri ->
-            uri?.let {
-                uriState.update { uri.toString() }
-            }
-        }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -74,8 +60,6 @@ class HomeActivity : ComponentActivity() {
         }
     }
 }
-
-
 
 
 @Composable
